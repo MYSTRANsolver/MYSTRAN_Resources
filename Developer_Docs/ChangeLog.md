@@ -2,6 +2,7 @@ This is the MASTER list of all current and prior changes to the source code and 
 Information here can be for features, errors/bugs, a list of source codes changes, changes to documentations, etc.
 After a release, this information is passed to the appropriate user and developer docs.
 Note that changes Prior to 14.0 have been less accurately documented and the time stamps may be approximate.
+From 14.0 and onward, all developer documents were made accessible so official releases can not be more accurately documented and also synced with documention.
 
 
 14.1 to Current
@@ -17,6 +18,12 @@ Note that changes Prior to 14.0 have been less accurately documented and the tim
 ---
 - NEED DEVELOPER INPUT
 The ELAS values in the SB-ALL-ELEM-TEST.DAT file was being overwritten.
+
+DOCUMENTATION:
+- In the PARAM card, AUTOSPC Default adjusted to 1.0E-8 (previously 1.0E-6)
+- In the PARAM card, added the entry DELBAN
+- In the CBUSH card, the +CONT entry was incorrectly stated at BAR98
+- Modified the Note in Section 4.3 to state that the differential stiffness matrix has been added for solid elements.
 
 
 13.0 to 13.2 (~9/1/2021)

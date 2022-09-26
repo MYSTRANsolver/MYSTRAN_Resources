@@ -38,6 +38,19 @@ element were used for all elements
 4) The BUSH coord transformation matrix TE was calculated wrong. The rows & cols were
 interchanged
 
+MODIFICATIONS:
+MYSTRAN previously used 1.0E-06 for the AUTOSPC default value. However, developers agreed that 1.0E-08 is a better choice, which is consistent with other commercial NASTRAN solvers.
+In “Source/Modules/PARAMS.f90” ONEPM8 defines the AUTOSPC value
+In “Source/Modules/CONSTANTS_1.f90” ONEPM8 is defined to be 1.0E-08_QUAD
+
+PARAM,DELBAN
+Deletes the Bandit files
+1.) Source/Interfaces/BD_PARAM_Interface.f90 where other subroutines can read the types of all parameter entities.
+2.) Source/LK1/L1A-BD/BD_PARAM.f90  which processes the PARAM bulk data cards
+3.) Source/Modlues/PARAMS.f90  where you define and comment the default value of your parameter, and describe what it does.
+In LK1/L1A-bD/BD_PARAM, the comment says that if it's 1, it deletes the bandit files, and if it's 0, it doesn't.
+The default is initialized in Modules/PARAMS.f90 and it says that by default, DELBAN = 1 Therefore the default is to delete the bandit files
+
 13.0 to 13.1 (8/10/2021)
 ---
 FEATURES:

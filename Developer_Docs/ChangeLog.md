@@ -20,10 +20,10 @@ From 14.0 and onward, all developer documents were made accessible so official r
 The ELAS values in the SB-ALL-ELEM-TEST.DAT file was being overwritten.
 
 DOCUMENTATION:
-- In the PARAM card, AUTOSPC Default adjusted to 1.0E-8 (previously 1.0E-6)
-- In the PARAM card, added the entry DELBAN
-- In the CBUSH card, the +CONT entry was incorrectly stated at BAR98
-- Modified the Note in Section 4.3 to state that the differential stiffness matrix has been added for solid elements.
+1) In the PARAM card, AUTOSPC Default adjusted to 1.0E-8 (previously 1.0E-6)
+2) In the PARAM card, added the entry DELBAN
+3) In the CBUSH card, the +CONT entry was incorrectly stated at BAR98
+4) Modified the Note in Section 4.3 to state that the differential stiffness matrix has been added for solid elements.
 
 
 13.0 to 13.2 (~9/1/2021)
@@ -39,11 +39,11 @@ element were used for all elements
 interchanged
 
 MODIFICATIONS:
-MYSTRAN previously used 1.0E-06 for the AUTOSPC default value. However, developers agreed that 1.0E-08 is a better choice, which is consistent with other commercial NASTRAN solvers.
+1) MYSTRAN previously used 1.0E-06 for the AUTOSPC default value. However, developers agreed that 1.0E-08 is a better choice, which is consistent with other commercial NASTRAN solvers.
 In “Source/Modules/PARAMS.f90” ONEPM8 defines the AUTOSPC value
 In “Source/Modules/CONSTANTS_1.f90” ONEPM8 is defined to be 1.0E-08_QUAD
 
-PARAM,DELBAN
+2) PARAM,DELBAN
 Deletes the Bandit files
 1.) Source/Interfaces/BD_PARAM_Interface.f90 where other subroutines can read the types of all parameter entities.
 2.) Source/LK1/L1A-BD/BD_PARAM.f90  which processes the PARAM bulk data cards

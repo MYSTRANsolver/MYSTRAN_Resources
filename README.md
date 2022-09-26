@@ -2,4 +2,5 @@
 
 The documentation for [MYSTRAN](https://github.com/MYSTRANsolver/MYSTRAN) is stored here.
 
-For now, everything has been "dumped" here, but the process to update the files has begun. Once that is complete, the files will be split into End User files and Developer files.
+Documenation updates are currently being made. They are expected to be complete by the end of 2022.
+See this ReadMe file for updates.

@@ -2,7 +2,7 @@ This is the MASTER list of all current and prior changes to the source code and 
 Information here can be for features, errors/bugs, a list of source codes changes, changes to documentations, etc.
 After a release, this information is passed to the appropriate user and developer docs.
 Note that changes Prior to 14.0 have been less accurately documented and the time stamps may be approximate.
-From 14.0 and onward, all developer documents were made accessible so official releases can not be more accurately documented and also synced with documention.
+From 14.0 and onward, all developer documents were made accessible so official releases can now be more accurately documented and also synced with documention.
 
 
 14.1 to Current

@@ -1,0 +1,16 @@
+! Change log (changes following completion of Version 5.32 updated on 07/08/08)
+
+! 09/15/08: New subr
+
+! ----------------------------------------------------------------------------------------------------------------------------------
+! Change log (changes following completion of Version 6.00b updated on 12/15/08)
+
+! 12/18/08: Change code in prep to accomodate large field B.D format
+
+! ----------------------------------------------------------------------------------------------------------------------------------
+! Change log (changes following completion of Version 6.33 updated on 02/01/11)
+
+!***** ERROR FOUND IN VERSION 6.33*****:
+! 10/27/11: If the parent entry has a blank field 10 (continuation), and there is a totally blank card following it in the B.D.,
+!           assume all data is defaulted.
+

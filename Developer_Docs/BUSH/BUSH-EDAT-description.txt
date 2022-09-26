@@ -1,0 +1,17 @@
+BUSH EDAT:
+---------
+
+EPNTK = EPNT(J) where J is internal element ID
+
+Count  Location in EDAT   Item
+-----  ----------------  -------
+  1      at EPNTK        Elem ID        
+  2      "  EPNTK +1     Prop ID        
+  3      "  EPNTK +2     Number of grids
+  4      "  EPNTK +3     Grid A         
+  5      "  EPNTK +4     Grid B         
+  6      "  EPNTK +5     V-vector key   
+  7      "  EPNTK +6     CID            
+  8      "  EPNTK +7     OCID           
+  9      "  EPNTK +8     Offset key
+

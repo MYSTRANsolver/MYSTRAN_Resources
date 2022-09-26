@@ -1,0 +1,929 @@
+! Change log (changes following completion of Version 1.02 on 05/01/03)
+
+! 05/17/03: Change array XEL to reflect change in dimension of array XEL from MELGP+1 to MELGP
+
+! 05/20/03: Start this change log
+
+! 05/25/03: Remove elno from USE MODEL_STUF
+!           Add INTEGER(INTENT(I) :: INT_ELEM_ID as internal element ID to arg list in subr EMG
+!           Change elno to INT_ELEM_ID throughout the rest of the subr
+
+! ----------------------------------------------------------------------------------------------------------------------------------
+! Change log (changes following completion of Version 2.03 on 02/13/05)
+
+! 03/19/05: Change EMG_ERR to NUM_EMG_FATAL_ERRS and put it into MODEL_STUF and remove it from arg list
+
+! 03/20/05: Remove IDENT. This is now TE_IDENT in module MODEL_STUF
+
+! 04/16/05: Only execute code for transforming offsets from global to basic for BAR 
+
+! ----------------------------------------------------------------------------------------------------------------------------------
+! Change log (changes following completion of Version 2.10 on 05/23/06)
+
+!***** ERROR FOUND IN VERSION 2.10 *****:
+! 06/05/06: Correct code on TE for ROD. Only 1st row was being calculated. Make 2nd row such that VX dot VY = 0. Then make 3rd row
+!           such that VX cross VY = VZ. Then normalized VX, VY VZ are 1st, 2nd, 3rd rows of TE
+
+!***** ERROR FOUND IN VERSION 2.10 *****:
+! 06/26/06: The above fix didn't always work. In ALL_ELEM_TEST it resulted in a null VY vector for some elements and the 2nd and
+!           3rd lines of TE were printed as "NaN" (undefined, 0/0). The run failed due to this. The fix that replaced that one is
+!           coded below based on a reference on web site http://fermi.jhuapl.edu/s1r/idl/s1rlib/vectors/v_basic.html 
+!           which is explained below (finding a vector VY perpendicular to another vector VX)
+
+!           Finding a Perpendicular Vector to a single Vector
+!           ------------------------------------------------- 
+!           (1) For a 2-d vector, A = (Ax, Ay), a vector perpendicular to it is B = (-Ay, Ax). The vector -B = (Ay,-Ax) is also
+!               perpendicular to A. 
+!           (2) A method for 3-d vectors is the following. For vector A = (Ax,Ay,Az) find the smallest component (absolute value)
+!               and set the corresponding element of perpendicular vector B to 0. The remaining two elements of B are the remaining
+!               two elements of A switched and with one of them negated. For example, if Ay has the smallest absolute value,
+!               then B = (-Az, 0, Ax) is a vector perpendicular to A as may be seen by showing that the dot product is 0.
+!               The 2-d case given above is seen to be a special case of this method. 
+
+! ----------------------------------------------------------------------------------------------------------------------------------
+! Change log (changes following completion of Version 5.00-Beta on 07/12/07)
+
+! 08/27/07: Add test to make sure that arrays OFFDIS are dimensioned high enough
+
+! ----------------------------------------------------------------------------------------------------------------------------------
+! Change log (changes following completion of Version 5.22 updated on 04/23/08)
+
+!***** ERROR FOUND IN VERSION 5.22 *****:
+! 04/29/08: Error in this subr when PENTA or TETRA elements are used. Arrays OFFDIS, OFFDIS_B should not have been used when
+!           PENTA, TETRA elements are in the model. Change code so that these arrays are only addressed for BAR, ROD
+
+! ----------------------------------------------------------------------------------------------------------------------------------
+! Change log (changes following completion of Version 5.30 updated on 05/18/08)
+
+! 06/08/08: Add arg to say whether to write warning messages in this call to EMG
+
+! ----------------------------------------------------------------------------------------------------------------------------------
+! Change log (changes following completion of Version 5.32 updated on 07/08/08)
+
+! 09/20/08: (1) Add BEAM element (the BEAM was added in some other subrs earlier - 04/20/08)
+!           (2) Add BUSH element
+!           (2) Change ELEM_LEN_12 to ELEM_LEN_AB (length of elem between elem ends A and B)
+
+! 11/06/08: Move CONTAIN'd subr CALC_VX_SORT_ORDER out of here and make stand-alone subr CALC_VEC_SORT_ORDER (since it will be
+!           used elsewhere also)
+
+! ----------------------------------------------------------------------------------------------------------------------------------
+! Change log (changes following completion of Version 11.0 updated on 06/14/22)
+
+! 07/16/20: Cosmetic change to make code for BEAM like that for BAR 
+
+! ----------------------------------------------------------------------------------------------------------------------------------
+! Change log (changes following completion of Version 11.2 updated on 09/10/20)
+
+! 10/05/20: Cosmetic change to a comment re: BAR, BEAM, BUSH, USER1
+
+! ----------------------------------------------------------------------------------------------------------------------------------
+! Change log (changes following completion of Version 12.1 updated on 02/13/21)
+
+! 02/20/21: Change OFFDIS_B: now in module MODEL_STUF so remove from declarations here
+
+! ----------------------------------------------------------------------------------------------------------------------------------
+! Change log (changes following completion of Version 13.1 updated on 08/10/21)
+
+!***** ERROR FOUND IN VERSION 13.1 *****:
+
+! 08/27/21: The BUSH TE was calc'd wrong. The rows & cols were interchanged (the transform of the required matrix was being used)
+
+! ##################################################################################################################################
+! Begin MIT license text.                                                                                    
+! _______________________________________________________________________________________________________
+                                                                                                         
+! Copyright 2019 Dr William R Case, Jr (dbcase29@gmail.com)                                              
+                                                                                                         
+! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and      
+! associated documentation files (the "Software"), to deal in the Software without restriction, including
+! without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to   
+! the following conditions:                                                                              
+                                                                                                         
+! The above copyright notice and this permission notice shall be included in all copies or substantial   
+! portions of the Software and documentation.                                                                              
+                                                                                                         
+! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS                                
+! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,                            
+! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE                            
+! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER                                 
+! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,                          
+! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN                              
+! THE SOFTWARE.                                                                                          
+! _______________________________________________________________________________________________________
+                                                                                                      
+! End MIT license text.                                                                                      
+ 
+      SUBROUTINE ELMGM1 ( INT_ELEM_ID, WRITE_WARN )
+ 
+! Calculates and checks some elem geometry for ROD, BAR, BEAM, triangles and provides a transformation matrix (TE) to transform the
+! element stiffness matrix in the element system to the basic coordinate system. Calculates grid point coords in local coord system.
+  
+      USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
+      USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06
+      use iount1, only                :  bug                                                                                      !?
+      USE SCONTR, ONLY                :  BLNK_SUB_NAM, MELGP, MOFFSET, NCORD, FATAL_ERR
+      USE TIMDAT, ONLY                :  TSEC
+      USE SUBR_BEGEND_LEVELS, ONLY    :  ELMGM1_BEGEND
+      USE CONSTANTS_1, ONLY           :  ZERO, ONE
+      USE DEBUG_PARAMETERS, ONLY      :  DEBUG
+      USE PARAMS, ONLY                :  EPSIL
+      USE MODEL_STUF, ONLY            :  BGRID, BUSH_CID, BUSH_OCID, CAN_ELEM_TYPE_OFFSET, CORD, EID, ELEM_LEN_12, ELEM_LEN_AB,    &
+                                         ELGP, NUM_EMG_FATAL_ERRS, EOFF, GRID, OFFDIS, OFFDIS_O, OFFDIS_B, OFFDIS_G, RCORD, TE,    &
+                                         TE_IDENT, TYPE, XEB, XEL
+      use model_stuf, only            :  agrid                                                                                    !?
+ 
+      USE ELMGM1_USE_IFs
+
+      IMPLICIT NONE
+ 
+      CHARACTER( 1*BYTE)              :: ID(3)              ! Used in deciding whether TE_IDENT = 'Y' or 'N'
+      CHARACTER( 5*BYTE)              :: SORT_ORDER         ! Order in which the VX(i) have been sorted in subr CALC_VEC_SORT_ORDER
+      CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'ELMGM1'
+      CHARACTER(LEN=*), INTENT(IN)    :: WRITE_WARN         ! If 'Y" write warning messages, otherwise do not
+      CHARACTER(1*BYTE)               :: CORD_FND           ! = 'Y' if coord sys ID on CONM2 defined, 'N' otherwise
+      CHARACTER(1*BYTE)               :: DO_IT              ! = 'Y' execute code that follows (see where DO_IT is initialized)
+
+      INTEGER(LONG), INTENT(IN)       :: INT_ELEM_ID        ! Internal element ID for which
+      INTEGER(LONG)                   :: ACID_G             ! Actual coordinate system ID
+      INTEGER(LONG)                   :: I,J,K              ! DO loop indices
+      integer(long)                   :: l                  ! DO loop index                                                       !?
+      INTEGER(LONG)                   :: I3_IN(3)           ! Integer array used in sorting VX. 
+
+      INTEGER(LONG)                   :: I3_OUT(3)          ! Integer array giving order of VX comps. If VX is in the order with
+!                                                             comp 2 smallest then comp 3 then comp 1 then I3_OUT is 2, 3, 1 
+
+      INTEGER(LONG)                   :: ICID               ! Internal coord sys no. corresponding to an actual coord sys no. 
+      INTEGER(LONG)                   :: ROWNUM             ! A row number in an array
+      INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = ELMGM1_BEGEND
+  
+      REAL(DOUBLE)                    :: DX1(3)             ! Array used in intermediate calc's
+      REAL(DOUBLE)                    :: DX2(3)             ! Array used in intermediate calc's
+      REAL(DOUBLE)                    :: EPS1               ! A small number to compare to real zero
+      REAL(DOUBLE)                    :: LX(3)              ! Distances
+      REAL(DOUBLE)                    :: MAGY               ! Magnitude of vector VY
+      REAL(DOUBLE)                    :: MAGZ               ! Magnitude of vector VZ
+      REAL(DOUBLE)                    :: PHID, THETAD       ! Outputs from subr GEN_T0L
+      REAL(DOUBLE)                    :: TE_BUSH_GA_GB(3,3) ! Coord transf for BUSH axes defined using GA-GB. ! NB *** new 9/13/21
+      REAL(DOUBLE)                    :: T0G(3,3)           ! Matrix to transform offsets from global to basic  coords 
+      REAL(DOUBLE)                    :: TG0(3,3)           ! Matrix to transform offsets from basic  to global coords 
+      REAL(DOUBLE)                    :: T0I(3,3)           ! Matrix to transform offsets from BUSH OCID to basic coords 
+      REAL(DOUBLE)                    :: TET(3,3)           ! Transpose of TE: UEL = TE*UEB 
+      REAL(DOUBLE)                    :: VX(3)              ! A vector in the elem x dir
+      REAL(DOUBLE)                    :: VY(3)              ! A vector in the elem y dir
+      REAL(DOUBLE)                    :: VZ(3)              ! A vector in the elem z dir
+      REAL(DOUBLE)                    :: V13(3)             ! A vector from grid 1 to grid 3 (for BAR, BEAM or USER1 it is V vector)
+      REAL(DOUBLE)                    :: XIB(2,3)           ! Coords at ends of BUSH elem: XIB(1,J) should = XIB(2,J) for 0 len elem
+  
+! **********************************************************************************************************************************
+      IF (WRT_LOG >= SUBR_BEGEND) THEN
+         CALL OURTIM
+         WRITE(F04,9001) SUBR_NAME, TSEC
+ 9001    FORMAT(1X,A,' BEGN ',F10.3)
+      ENDIF
+
+! **********************************************************************************************************************************
+      EPS1 = EPSIL(1)
+ 
+! Initialize
+  
+      DO I=1,MELGP
+        DO J=1,3
+           XEL(I,J) = ZERO
+        ENDDO 
+      ENDDO 
+ 
+      DO I=1,3
+        DO J=1,3
+           TE(I,J) = ZERO
+        ENDDO 
+      ENDDO 
+ 
+      DO I=1,3
+         VX(I) = ZERO
+      ENDDO
+
+      DO_IT = 'Y'                                          ! Used to decide if some blocks of code will get executed or not
+      IF (TYPE == 'BUSH    ') THEN                         ! DO_IT = 'Y' except when BUSH elem has a defined CID in field 9 of CBUSH
+         IF (BUSH_CID >= 0) THEN                           ! in which case the TE matrix for BUSH is obtained from CID
+            DO_IT = 'N'
+         ENDIF
+      ENDIF
+      write(f06,*) 'In ELMGM1: DO_IT = "', do_it, '"'
+! ----------------------------------------------------------------------------------------------------------------------------------
+! Make sure the number of elem grids is not larger than OFFDIS is dimensioned for
+
+      IF ((CAN_ELEM_TYPE_OFFSET == 'Y') .AND. (ELGP > MOFFSET)) THEN
+         WRITE(ERR,1954) SUBR_NAME, MOFFSET, ELGP, TYPE
+         WRITE(F06,1954) SUBR_NAME, MOFFSET, ELGP, TYPE
+         NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+         FATAL_ERR = FATAL_ERR + 1
+      ENDIF
+
+! Init OFFDIS_B. Some elements will not require the offsets transformed to basic
+
+      IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ') .OR. (TYPE == 'BUSH    ') .OR. (TYPE == 'ROD     ')) THEN
+         DO I=1,ELGP
+            DO J=1,3
+               OFFDIS_B(I,J) = ZERO
+            ENDDO
+         ENDDO
+      ENDIF
+
+! ----------------------------------------------------------------------------------------------------------------------------------
+! If this is a BUSH element and field 9 on the CBUSH (CID) is >=0, the TE coord transformation matrix is determined from:
+
+      IF ((TYPE == 'BUSH    ') .AND. (BUSH_CID >= 0)) THEN
+
+         IF (BUSH_CID > 0) THEN                            ! Need to get transformation of BUSH_CID to basic and put it into TE
+
+            CORD_FND = 'N'
+            ICID = 0
+            DO J=1,NCORD
+               IF (BUSH_CID == CORD(J,2)) THEN
+                  CORD_FND = 'Y'
+                  ICID = J
+                  EXIT
+               ENDIF
+            ENDDO   
+            IF (CORD_FND == 'N') THEN
+               NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+               FATAL_ERR = FATAL_ERR + 1
+               WRITE(ERR,1822) 'COORD SYSTEM ', BUSH_CID, TYPE, EID
+               WRITE(F06,1822) 'COORD SYSTEM ', BUSH_CID, TYPE, EID
+            ENDIF
+
+            IF (CORD_FND == 'Y') THEN                      ! NOTE: This BUSH TE transforms a vector in BUSH_CID to basic
+               TET(1,1) = RCORD(ICID, 4)   ;   TET(1,2) = RCORD(ICID, 5)   ;   TET(1,3) = RCORD(ICID, 6)
+               TET(2,1) = RCORD(ICID, 7)   ;   TET(2,2) = RCORD(ICID, 8)   ;   TET(2,3) = RCORD(ICID, 9)
+               TET(3,1) = RCORD(ICID,10)   ;   TET(3,2) = RCORD(ICID,11)   ;   TET(3,3) = RCORD(ICID,12)
+               DO I=1,3
+                  DO J=1,3
+                     TE(I,J) = TET(J,I)
+                  ENDDO
+               ENDDO
+!!!            write(f06,*) ' TE coord transformation matrix for BUSH coord system ',  bush_cid                                   !?
+!!!            do i=1,3                                                                                                           !?
+!!!               write(f06,'(3es14.6)') (te(i,j),j=1,3)                                                                          !?
+!!!            enddo                                                                                                              !?
+!!!            write(f06,*)                                                                                                       !?
+            ENDIF
+
+         ELSE                                              ! BUSH_CID is basic so TE is the identity matrix
+
+            DO I=1,3
+               DO J=1,3
+                  TE(I,J) = ZERO
+               ENDDO
+               TE(I,I) = ONE
+            ENDDO
+
+         ENDIF
+
+      ENDIF
+
+! ----------------------------------------------------------------------------------------------------------------------------------
+! If there are offsets that are specified in global coords (or some other for BUSH), calculate the value of the offsets in basic
+! coords so that they can be used below to find the element axes in basic coords
+
+!xx   IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ') .OR. (TYPE == 'ROD     ')) THEN
+      IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ') .OR. (TYPE == 'BUSH    ') .OR. (TYPE == 'ROD     ')) THEN
+
+         IF (EOFF(INT_ELEM_ID) == 'Y') THEN
+            DO I=1,ELGP
+               ACID_G = GRID(BGRID(I),3)                   ! Get global coord sys for this grid
+               IF (ACID_G /= 0) THEN                       ! Need to transform offset vector from global to basic coords
+                  ICID = 0
+                  DO J=1,NCORD
+                     IF (ACID_G == CORD(J,2)) THEN         ! ACID_G global coord system exists. It was checked in CORDP_PROC
+                        ICID = J
+                        EXIT
+                     ENDIF
+                  ENDDO   
+
+                  CALL GEN_T0L ( BGRID(I), ICID, THETAD, PHID, T0G )
+                  DO J=1,3
+                     OFFDIS_B(I,J) = T0G(J,1)*OFFDIS(I,1) + T0G(J,2)*OFFDIS(I,2) + T0G(J,3)*OFFDIS(I,3) 
+                  ENDDO   
+               ELSE                                        ! Offset was in basic coords
+                  DO J=1,3
+                     OFFDIS_B(I,J) = OFFDIS(I,J)
+                  ENDDO   
+               ENDIF
+            ENDDO
+         ELSE                                              ! There are no offsets so set OFFDIS_B to zero
+            DO I=1,ELGP
+               DO J=1,3
+                  OFFDIS_B(I,J) = ZERO
+               ENDDO
+            ENDDO
+         ENDIF 
+         
+      ENDIF
+
+! ----------------------------------------------------------------------------------------------------------------------------------
+! Offsets for BUSH are specified in a unique coord system. It may or may not be basic or global. So we first transform the input
+! offset values to basic and then transform them to global. This way, when we process the offsets in subr ELEM_TRANSFORM_LBG, 
+! we can treat the final offset values for the BUSH the same as we do for BAR, BEAM or ROD.
+! The coord system for BUSH offsets is BUSH_OCID which can be:
+!  (1) -1 means offset lies on the line between GA and GB, or
+!  (2)  a positive number indicating a coord system number
+
+      IF (TYPE == 'BUSH    ') THEN
+
+         DO I=1,ELGP
+            DO J=1,3                                       ! Initialize
+               OFFDIS_B(I,J) = ZERO
+               OFFDIS_G(I,J) = ZERO
+            ENDDO
+         ENDDO
+
+         write(f06,*) 'In ELMGM1: EOFF(INT_ELEM_ID) = ', eoff(int_elem_id)                                                        !?
+         write(f06,*)                                                                                                             !?
+         write(f06,*) 'In ELMGM1: OFFDIS_O for ', trim(type), eid,':'                                                             !?
+         write(f06,*) '-----------------------------------------'                                                                 !?
+         do i=1,elgp                                                                                                              !?
+            do j=1,3                                                                                                              !?
+               write(f06,'(a,2i3,1es14.6,a)') ' In ELMGM1: I, J, OFFDIS_O(I,J) = ', i, j, offdis_o(i,j),                         &!?
+                                              ' (originall offsets before any coord transformation)'                              !?
+            enddo                                                                                                                 !?
+            write(f06,*)                                                                                                          !?
+         enddo                                                                                                                    !?
+         write(f06,*)                                                                                                             !?
+         IF (EOFF(INT_ELEM_ID) == 'Y') THEN
+
+            CORD_FND = 'N'
+            IF (BUSH_OCID > 0) THEN                        ! Don't transform offsets here when BUSH_OCID = -1 (local axes offsets)
+               ICID = 0
+               DO J=1,NCORD
+                  IF (BUSH_OCID == CORD(J,2)) THEN         ! BUSH_OCID coord system exists. It was checked in CORD_PROC
+                     CORD_FND = 'Y'
+                     ICID = J
+                     EXIT
+                  ENDIF
+               ENDDO   
+               IF (CORD_FND == 'N') THEN                   ! Coord sys OCID on CBUSH undefined
+                  NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+                  FATAL_ERR = FATAL_ERR + 1
+                  WRITE(ERR,1822) 'COORD SYSTEM ', BUSH_OCID, TYPE, EID
+                  WRITE(F06,1822) 'COORD SYSTEM ', BUSH_OCID, TYPE, EID
+               ENDIF
+               write(f06,*) 'In ELMGM1: BUSH_OCID coord found = ', cord_fnd, ' and coord system index = ', icid                   !?
+               IF (CORD_FND == 'Y') THEN
+                  CALL GEN_T0L ( BGRID(1), ICID, THETAD, PHID, T0I )
+                  DO J=1,3
+                     OFFDIS_B(1,J) = T0I(J,1)*OFFDIS_O(1,1) + T0I(J,2)*OFFDIS_O(1,2) + T0I(J,3)*OFFDIS_O(1,3) 
+                  ENDDO
+                  write(f06,*)                                                                                                    !?
+                  write(f06,'(a,12(1es15.6))') ' In  ELMGM1: T0I transforms OFFDIS from OCID to basic coords.. ', (t0i(1,j),j=1,3)!?
+                  write(f06,'(63x,3es15.6)') (t0i(2,j),j=1,3)                                                                     !?
+                  write(f06,'(63x,3es15.6)') (t0i(3,j),j=1,3)                                                                     !?
+                  write(f06,*)                                                                                                    !?
+               ENDIF
+
+            ELSE IF (BUSH_OCID == 0) THEN                  ! Offset is in basic coords
+
+               DO J=1,3
+                  OFFDIS_B(1,J) = OFFDIS(1,J)
+                  write(f06,'(a,i3,1es14.6,a)') ' J, OFFDIS_B(1,J) = ', j, offdis(1,j), ' (same as OFFDIS in local since no OCID)'
+               ENDDO   
+
+            ELSE IF (BUSH_OCID == -1) THEN                 ! Offsets are along the line between GA and GB
+
+               DX1(1) = OFFDIS_O(1,1)                      ! Transform GA offsets (at this point relative to GA-GB axis) to basic
+               DX1(2) = OFFDIS_O(1,2)
+               DX1(3) = OFFDIS_O(1,3)
+               CALL MATMULT_FFF (TE_BUSH_GA_GB, DX1, 3, 3, 1, DX2 )
+               OFFDIS_B(1,1) = DX2(1)
+               OFFDIS_B(1,2) = DX2(2)
+               OFFDIS_B(1,3) = DX2(3)
+
+               DX1(1) = OFFDIS_O(2,1)                      ! Transform GB offsets (at this point relative to GA-GB axis) to basic
+               DX1(2) = OFFDIS_O(2,2)
+               DX1(3) = OFFDIS_O(2,3)
+               CALL MATMULT_FFF (TE_BUSH_GA_GB, DX1, 3, 3, 1, DX2 )
+               do k=1,3
+                  write(f06,'(a,i2,a,3es14.6,2(a,1es14.6))') ' In ELMGM1: row ',k,' of TE, DX1, DX2 = ',                         &!?
+                                                              (te(k,l),l=1,3),'   ',dx1(k),'   ',dx2(k)                           !?
+               enddo
+               write(f06,*)                                                                                                       !?
+               OFFDIS_B(2,1) = DX2(1)
+               OFFDIS_B(2,2) = OFFDIS_B(1,2)
+               OFFDIS_B(2,3) = OFFDIS_B(1,3)
+
+            ENDIF
+
+!xx         DO J=1,3                                       ! Basic coords at end A of the BUSH elem
+!xx            XIB(1,J) = XEB(1,J) + OFFDIS_B(1,J)
+!xx         ENDDO
+!xx         DO J=1,3
+!xx            XIB(2,J) = XIB(1,J)                         ! Zero length of BUSH element.  
+!xx            OFFDIS_B(2,J) = XIB(2,J) - XEB(2,J)         ! Can't use this. OFFDIS_B was coord transf (above). Check 0 length later
+!xx         ENDDO
+                                                           ! Transform offsets from basic to global and put result into OFFDIS
+            DO I=1,ELGP
+               ACID_G = GRID(BGRID(I),3)                   ! Get global coord sys for this grid
+               IF (ACID_G /= 0) THEN                       ! Global is not basic so need to transform offset from basic to global
+                  ICID = 0
+                  DO J=1,NCORD
+                     IF (ACID_G == CORD(J,2)) THEN
+                        ICID = J
+                        EXIT
+                     ENDIF
+                  ENDDO   
+                  CALL GEN_T0L ( BGRID(I), ICID, THETAD, PHID, T0G )
+                  DO J=1,3                                 ! We want transpose of T0G since we are transforming from basic to global
+                     DO K=1,3
+                        TG0(J,K) = T0G(K,J)
+                     ENDDO
+                  ENDDO
+                  write(f06,'(a,i8,a,i8)') '    Transformation matrix T0G for global coord system ',acid_g,' at grid ', agrid(i)  !?
+                  do k=1,3                                                                                                        !?
+                     write(f06,'(a,i2,a,3(1es14.6))') '                                     Row ',k,' = ', (t0g(k,j),j=1,3)       !?
+                  enddo                                                                                                           !?
+                  write(f06,*)                                                                                                    !?
+                  DO J=1,3
+                     OFFDIS_G(I,J) = TG0(J,1)*OFFDIS_B(I,1) + TG0(J,2)*OFFDIS_B(I,2) + TG0(J,3)*OFFDIS_B(I,3) 
+                  ENDDO   
+               ELSE                                        ! Global was basic so no transformation of coords needed
+                  DO J=1,3
+                     OFFDIS_G(I,J) = OFFDIS_B(I,J)
+                  ENDDO   
+               ENDIF
+            ENDDO
+
+            DO I=1,ELGP                                    ! Put global offsets in OFFDIS since these are the ones needed when
+               DO J=1,3                                    ! offsets are applied in subr ELEM_TRANSFORM_LBG
+                  OFFDIS(I,J) = OFFDIS_G(I,J)
+               ENDDO
+            ENDDO
+
+         ELSE                                              ! There are no offsets so set OFFDIS_B to zero for both grids
+
+            DO I=1,ELGP
+               DO J=1,3
+                  OFFDIS_B(I,J) = ZERO
+               ENDDO
+            ENDDO
+
+         ENDIF 
+
+      ENDIF
+
+      write(f06,*) 'In ELMGM1: OFFDIS_B for ', trim(type), eid,':'                                                                          !?
+      write(f06,*) '-----------------------------------------'                                                                    !?
+      do i=1,elgp                                                                                                                 !?
+         do j=1,3                                                                                                                 !?
+            write(f06,'(a,2i3,1es14.6)') ' In ELMGM1: I, J, OFFDIS_B(I,J) = ', i, j, offdis_b(i,j)                                !?
+         enddo                                                                                                                    !?
+         write(f06,*)                                                                                                             !?
+      enddo                                                                                                                       !?
+      write(f06,*)                                                                                                                !?
+
+      write(f06,*) 'In ELMGM1: OFFDIS_G for ', trim(type), eid,':'                                                                          !?
+      write(f06,*) '-----------------------------------------'                                                                    !?
+      do i=1,elgp                                                                                                                 !?
+         do j=1,3                                                                                                                 !?
+            write(f06,'(a,2i3,1es14.6)') ' In ELMGM1: I, J, OFFDIS_G(I,J) = ', i, j, offdis_g(i,j)                                !?
+         enddo                                                                                                                    !?
+         write(f06,*)                                                                                                             !?
+      enddo                                                                                                                       !?
+      write(f06,*)                                                                                                                !?
+      
+! ----------------------------------------------------------------------------------------------------------------------------------
+! Calculate a vector between ends of the element in basic coords (not between grids if there are offsets). 
+! NOTE: BUSH is a zero length element and the vector in the element x direction is determined from either:
+!       (1) CID 
+
+      IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ') .OR. (TYPE == 'ROD     ')) THEN
+         VX(1) = ( XEB(2,1) + OFFDIS_B(2,1) ) - ( XEB(1,1) + OFFDIS_B(1,1) )
+         VX(2) = ( XEB(2,2) + OFFDIS_B(2,2) ) - ( XEB(1,2) + OFFDIS_B(1,2) )
+         VX(3) = ( XEB(2,3) + OFFDIS_B(2,3) ) - ( XEB(1,3) + OFFDIS_B(1,3) )
+      ELSE
+         VX(1) = XEB(2,1) - XEB(1,1)
+         VX(2) = XEB(2,2) - XEB(1,2)
+         VX(3) = XEB(2,3) - XEB(1,3)
+      ENDIF
+      LX(1) = VX(1)
+      LX(2) = VX(2)
+      LX(3) = VX(3)
+                                                           ! When there is no BUSH_CID the x axis is along line between the 2 grids
+      IF (TYPE == 'BUSH    ') THEN
+         VX(1) = XEB(2,1) - XEB(1,1)
+         VX(2) = XEB(2,2) - XEB(1,2)
+         VX(3) = XEB(2,3) - XEB(1,3)
+         LX(1) = ( XEB(2,1) + OFFDIS_B(2,1) ) - ( XEB(1,1) + OFFDIS_B(1,1) )
+         LX(2) = ( XEB(2,2) + OFFDIS_B(2,2) ) - ( XEB(1,2) + OFFDIS_B(1,2) )
+         LX(3) = ( XEB(2,3) + OFFDIS_B(2,3) ) - ( XEB(1,3) + OFFDIS_B(1,3) )
+      ENDIF
+
+! Length of element between ends is:
+
+      ELEM_LEN_AB = DSQRT( LX(1)*LX(1) + LX(2)*LX(2) + LX(3)*LX(3) )
+      write(f06,'(a,3(1es14.6))') '    ELEM_LEN_AB                             = ',elem_len_ab                                    !?
+      write(f06,'(a,3(1es14.6))') '    ELEM_LEN_12                             = ',elem_len_12                                    !?
+!!!   write(f06,9880) 'ELEM_LEN_AB for ', trim(type), ' element' , eid, elem_len_ab                                               !?
+!!!   write(f06,9880) 'ELEM_LEN_12 for ', trim(type), ' element' , eid, elem_len_12                                               !?
+ 9880 format(4x,3a,i8,4x, '=', 1es15.6)                                                                                           !?
+
+! If ELEM_LEN_AB is equal to zero (for all but BUSH) then write error and return. If BUSH elem length NOT zero, then error also
+
+      IF (TYPE /= 'BUSH    ') THEN
+         IF (ELEM_LEN_AB <= EPS1) THEN
+            WRITE(ERR,1904) TYPE, EID, ELEM_LEN_AB
+            WRITE(F06,1904) TYPE, EID, ELEM_LEN_AB
+            NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+            FATAL_ERR = FATAL_ERR + 1
+            RETURN
+         ENDIF
+      ELSE
+         IF (ELEM_LEN_AB > .0001D0) THEN
+            WRITE(ERR,1959) SUBR_NAME, TYPE, EID, ELEM_LEN_AB
+            WRITE(F06,1959) SUBR_NAME, TYPE, EID, ELEM_LEN_AB
+!           NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+!           FATAL_ERR = FATAL_ERR + 1
+!           RETURN
+         ENDIF
+      ENDIF
+
+! ----------------------------------------------------------------------------------------------------------------------------------
+! Unit vector in element X direction except for BUSH element with CID >= 0 (i.e. when BUSH does not have a V vector)
+
+      IF (DO_IT == 'Y') THEN
+         IF (TYPE == 'BUSH    ') THEN
+            DO I=1,3
+               TE(1,I) = VX(I)/ELEM_LEN_12                 ! For BUSH use length between 2 grids as length between elem ends is zero
+            ENDDO
+            write(f06,'(2a,i8,a,3es14.6))') ' In ELMGM1 for ',trim(type), eid,'. TE(1,I) = ', (te(1,i),i=1,3)                     !?
+         ELSE
+            DO I=1,3
+               TE(1,I) = VX(I)/ELEM_LEN_AB
+            ENDDO
+         ENDIF 
+      ELSE                                                 ! NB *** new 09/13/21
+         IF (TYPE == 'BUSH    ') THEN                      ! NB *** new 09/13/21
+            DO I=1,3                                       ! NB *** new 09/13/21
+               TE_BUSH_GA_GB(1,I) = VX(I)/ELEM_LEN_12      ! NB *** new 09/13/21
+            ENDDO                                          ! NB *** new 09/13/21
+         ENDIF                                             ! NB *** new 09/13/21
+      ENDIF
+
+! ----------------------------------------------------------------------------------------------------------------------------------
+      IF ((TYPE == 'BUSH    ') .AND. (DEBUG(110) > 0)) THEN
+         CALL DEBUG_ELMGM1_FOR_BUSH
+      ENDIF
+
+! ----------------------------------------------------------------------------------------------------------------------------------
+! Calculate y and z axes for ROD (since it has no v-vector to help). Also, we need a set of axes for the BUSH where, like the ROD,
+! the x-elem axis is from GA to GB. We will use this in the BUSH unique coord transformation matrix TE_BUSH_GA_GB(3,3) that will be
+! used in processing BUSH offsets. Like the ROD the y-elem and z-elem axes will be calculated based on the procedure referenced 
+! below from the internet ("Some Basic Vector Operations In IDL")
+
+!xx   IF (TYPE == 'ROD     ') THEN                         ! NB *** new 09/13/21
+      IF ((TYPE == 'ROD     ') .OR. (TYPE == 'BUSH    ')) THEN
+
+         DO I=1,3
+            I3_IN(I)   = I
+            I3_OUT(I)  = I3_IN(I)
+         ENDDO
+         CALL CALC_VEC_SORT_ORDER ( VX, SORT_ORDER, I3_OUT)! Use this rather than SORT_INT1_REAL1 - didn't work for vec 10., 0., 0.
+         IF (SORT_ORDER == '     ') THEN                   ! Subr CALC_VEC_SORT_ORDER did not find a sort order
+            FATAL_ERR = FATAL_ERR + 1
+            NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+            WRITE(ERR,1944) SUBR_NAME, TYPE, EID
+            WRITE(F06,1944) SUBR_NAME, TYPE, EID
+            RETURN
+         ENDIF
+                                                           ! See notes on "Some Basic Vector Operations In IDL" on web site:
+                                                           ! http://fermi.jhuapl.edu/s1r/idl/s1rlib/vectors/v_basic.html
+         VY(I3_OUT(1)) =  ZERO                             !  (a) Component of VY in direction of min VX is set to zero
+         VY(I3_OUT(2)) =  VX(I3_OUT(3))                    !  (b) Other 2 VY(i) are corresponding VX(i) switched with one x(-1)
+         VY(I3_OUT(3)) = -VX(I3_OUT(2))
+         MAGY  = DSQRT(VY(1)*VY(1) + VY(2)*VY(2) + VY(3)*VY(3))
+
+!!!      write(bug,88665) eid, (i3_out(i),i=1,3)                                                                                  !?
+!!!      write(bug,88667) eid, vx(1), vx(2), vx(3), elem_len_ab                                                                   !?
+!!!      write(bug,88668) vy(1), vy(2), vy(3), magy                                                                               !?
+
+         IF (DABS(MAGY) < EPS1) THEN
+            FATAL_ERR = FATAL_ERR + 1
+            NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+            WRITE(ERR,1938) SUBR_NAME, 'Y', TYPE, EID, (VY(I),I=1,3)
+            WRITE(F06,1938) SUBR_NAME, 'Y', TYPE, EID, (VY(I),I=1,3)
+            RETURN
+         ENDIF
+
+         IF (TYPE /= 'BUSH    ') THEN                      ! NB *** new 09/13/21
+            DO I=1,3
+               TE(2,I) = VY(I)/MAGY
+            ENDDO
+         ELSE
+            DO I=1,3                                       ! NB *** new 09/13/21
+               TE_BUSH_GA_GB(2,I) = VY(I)/MAGY             ! NB *** new 09/13/21
+            ENDDO                                          ! NB *** new 09/13/21
+         ENDIF                                             ! NB *** new 09/13/21
+
+         CALL CROSS ( VX, VY, VZ )
+
+         MAGZ  = DSQRT(VZ(1)*VZ(1) + VZ(2)*VZ(2) + VZ(3)*VZ(3))
+!!!      write(bug,88669) vz(1), vz(2), vz(3), magz                                                                               !?
+
+         IF (DABS(MAGZ) < EPS1) THEN
+            FATAL_ERR = FATAL_ERR + 1
+            NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+            WRITE(ERR,1938) SUBR_NAME, 'Z', TYPE, EID, (VZ(I),I=1,3)
+            WRITE(F06,1938) SUBR_NAME, 'Z', TYPE, EID, (VZ(I),I=1,3)
+            RETURN
+         ENDIF
+
+         IF (TYPE /= 'BUSH    ') THEN                      ! NB *** new 09/13/21
+            DO I=1,3
+               TE(3,I) = VZ(I)/MAGZ
+            ENDDO
+         ELSE                                              ! NB *** new 09/13/21
+            DO I=1,3                                       ! NB *** new 09/13/21
+               TE_BUSH_GA_GB(3,I) = VZ(I)/MAGZ             ! NB *** new 09/13/21
+            ENDDO                                          ! NB *** new 09/13/21
+         ENDIF                                             ! NB *** new 09/13/21
+
+! Check if TE is the identity matrix and set a flag
+
+         TE_IDENT = 'N'
+         DO I=1,3
+            ID(I) = 'N'
+         ENDDO
+         DO I=1,3
+            IF (DABS(TE(I,I) - ONE) < EPS1) THEN
+               ID(I) = 'Y'
+            ELSE
+               ID(I) = 'N'
+            ENDIF
+         ENDDO 
+         IF ((ID(1) == 'Y') .AND. (ID(2) == 'Y') .AND. (ID(3) == 'Y')) THEN
+            TE_IDENT = 'Y'
+         ENDIF
+
+! Offsets need to be in global coords for the BUSH. TE_BUSH_GA_GB coord transformation will transform the offsets originally
+! specified on input to basic coords:
+
+         DX1(1) = OFFDIS_O(1,1)
+         DX1(2) = OFFDIS_O(1,2)
+         DX1(3) = OFFDIS_O(1,3)
+         CALL MATMULT_FFF ( TE_BUSH_GA_GB, DX1, 3, 3, 1, DX2 )
+         OFFDIS_B(1,1) = DX2(1)
+         OFFDIS_B(1,2) = DX2(2)
+         OFFDIS_B(1,3) = DX2(3)
+
+         DX1(1) = OFFDIS_O(2,1)
+         DX1(2) = OFFDIS_O(2,2)
+         DX1(3) = OFFDIS_O(2,3)
+         CALL MATMULT_FFF ( TE_BUSH_GA_GB, DX1, 3, 3, 1, DX2 )
+         OFFDIS_B(2,1) = DX2(1)
+         OFFDIS_B(2,2) = DX2(2)
+         OFFDIS_B(2,3) = DX2(3)
+         
+         DO I=1,2
+            DO J=1,3
+               OFFDIS(I,J) = OFFDIS_B(I,J)
+            ENDDO
+         ENDDO
+
+      ENDIF
+      write(f06,*) 'In ELMGM1, TE_BUSH_GA_GB is coord transformation from BUSH GA-GB axis to basic'                               !?
+      do i=1,3                                                                                                                    !?
+         write(f06,'(3es14.6)') (te_bush_ga_gb(i,j),j=1,3)                                                                        !?
+      enddo                                                                                                                       !?
+! ----------------------------------------------------------------------------------------------------------------------------------
+! Calculate remainder of TE for elements other than ROD
+ 
+! Calculate V13, vector from G.P.-1 to G.P.-3. For BAR, BEAM, BUDH, USER1 the V13 vector is the v vector = XEB(ELGP+1,i)
+ 
+begn: IF ((TYPE /= 'ROD     ') .AND. (DO_IT == 'Y')) THEN
+    
+!xx      IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ') .OR. (TYPE == 'BUSH    ') .OR. (TYPE == 'USER1   ')) THEN
+         IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ') .OR. (TYPE == 'USER1   ')) THEN
+            ROWNUM = ELGP + 1
+         ELSE      
+            ROWNUM = 3
+         ENDIF
+         DO I=1,3  
+            V13(I) = XEB(ROWNUM,I) - XEB(1,I)
+         ENDDO 
+!!!      write(f06,'(a,3(1es14.6))') '    V13(1-3)                                = ',(v13(i),i=1,3)                              !?
+ 
+! Calculate VX x V13 and unit vector in elem z dir. (Col. 3 of TE). If MAGZ is equal to zero, then vector from G.P. 1
+! to G.P. 3 is parallel to vector from G.P.-1 to G.P.-2 so write error and quit.
+ 
+cont:    IF ((TYPE == 'BUSH    ') .AND. (BUSH_CID >= 0)) THEN ! If true we have already calc'd TE for this BUSH elem
+
+            CONTINUE
+
+         ELSE                                                 ! For all other situations continue to calc TE
+
+            CALL CROSS ( VX, V13, VZ )
+!!!         write(f06,'(a,3(1es14.6))') '    VZ(1-3)                                 = ',(vz(i),i=1,3)                            !?
+!!!         write(f06,*)                                                                                                          !?
+            MAGZ = DSQRT(VZ(1)*VZ(1) + VZ(2)*VZ(2) + VZ(3)*VZ(3))
+            IF (MAGZ <=  EPS1) THEN
+               IF ((TYPE == 'BAR     ')  .OR. (TYPE == 'BEAM    ')) THEN
+                  WRITE(ERR,1905) TRIM(TYPE), EID
+                  WRITE(F06,1905) TRIM(TYPE), EID
+                  NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+                  FATAL_ERR = FATAL_ERR + 1
+                  RETURN
+               ELSE
+                  write(f06,*) ' At ERR 1906 for ', trim(type), eid, 'with BUSH_CID = ', bush_cid                                 !? 
+                  WRITE(ERR,1906) TYPE, EID
+                  WRITE(F06,1906) TYPE, EID
+                  NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+                  FATAL_ERR = FATAL_ERR + 1
+                  RETURN
+               ENDIF
+            ENDIF
+            DO I=1,3
+               TE(3,I) = VZ(I)/MAGZ
+            ENDDO
+ 
+            CALL CROSS ( VZ, VX, VY )                      ! Calc unit vector in Ye dir. (from VZ (cross) VX): If MAGY = 0 quit
+            MAGY = DSQRT(VY(1)*VY(1) + VY(2)*VY(2) + VY(3)*VY(3))
+            IF(MAGY <= EPS1) THEN
+               WRITE(ERR,1912) EID,TYPE
+               WRITE(F06,1912) EID,TYPE
+               NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+               FATAL_ERR = FATAL_ERR + 1
+               RETURN
+            ENDIF
+            DO I=1,3
+               TE(2,I) = VY(I)/MAGY
+            ENDDO 
+                                                          ! Now set TE_IDENT to be 'Y' if TE is an identity matrix. 
+            TE_IDENT = 'N'
+            DO I=1,3
+               ID(I) = 'N'
+            ENDDO
+            DO I=1,3
+               IF (DABS(TE(I,I) - ONE) < EPS1) THEN
+                  ID(I) = 'Y'
+               ELSE
+                  ID(I) = 'N'
+               ENDIF
+            ENDDO 
+            IF ((ID(1) == 'Y') .AND. (ID(2) == 'Y') .AND. (ID(3) == 'Y')) THEN
+               TE_IDENT = 'Y'
+            ENDIF
+ 
+         ENDIF cont
+
+      ENDIF begn
+ 
+!!!   write(bug,*)                                                                                                                !?
+!!!   write(bug,*) ' Transformation matrix TE in ELMGM1 for ', type, eid                                                          !?
+!!!   do i=1,3                                                                                                                    !?
+!!!      write(bug,'(a,i2,a,3(1es14.6))') '                                     Row ', i, ' = ', (te(i,j),j=1,3)                  !?
+!!!   enddo                                                                                                                       !?
+!!!   write(bug,*)                                                                                                                !?
+
+! ----------------------------------------------------------------------------------------------------------------------------------
+! Use TE to get array of elem coords in local system.
+ 
+      XEL(1,1) = ZERO
+      XEL(1,2) = ZERO
+      XEL(1,3) = ZERO
+  
+      DO I=2,ELGP
+         DO J=1,3
+            XEL(I,J) = ZERO
+            DO K=1,3
+               XEL(I,J) = XEL(I,J) + (XEB(I,K) - XEB(1,K))*TE(J,K)
+            ENDDO 
+         ENDDO 
+      ENDDO 
+  
+! **********************************************************************************************************************************
+      IF (WRT_LOG >= SUBR_BEGEND) THEN
+         CALL OURTIM
+         WRITE(F04,9002) SUBR_NAME,TSEC
+ 9002    FORMAT(1X,A,' END  ',F10.3)
+      ENDIF
+
+      RETURN
+
+! **********************************************************************************************************************************
+ 1822 FORMAT(' *ERROR  1822: ',A,I8,' ON ',A,I8,' IS UNDEFINED')
+
+ 1904 FORMAT(' *ERROR  1904: ',A,I8,' HAS LENGTH BETWEEN ITS ELEMENT ENDS (INCL EFFECTS OF OFFSETS) = ',1ES9.2,'. TOO SMALL')
+
+ 1905 FORMAT(' *ERROR  1905: V VECTOR ON ',A,' ELEMENT ',I8,' IS PARALLEL TO VECTOR FROM END A TO END B')
+
+ 1906 FORMAT(' *ERROR  1906: ',A,I8,' HAS INTERNAL GRID 3 (FOR V VECTOR) TOO CLOSE TO LINE BETWEEN INTERNAL GRIDS 1 AND 2')
+
+ 1912 FORMAT(' *ERROR  1912: CANNOT CALCULATE VECTOR IN ELEMENT Y DIRECTION FOR ELEMENT ',I8,' TYPE ',A)
+
+ 1938 FORMAT(' *ERROR  1938: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
+                    ,/,14X,' CANNOT CALCULATE PROPER VECTOR IN ELEMENT LOCAL COORDINATE DIRECTION ',A,' FOR ',A,' ELEMENT ',I8,'.' &
+                    ,/,14X,' THE VECTOR COMPONENTS CALCULATED WERE ',3(1ES14.6))
+
+ 1944 FORMAT(' *ERROR  1944: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
+                    ,/,14X,' THE VX VECTOR FOR ',A,' ELEMENT ',I8,' WAS LEFT UNSORTED. IT MUST BE SORTED TO DETERMINE VY, VZ') 
+
+ 1954 FORMAT(' *ERROR  1954: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
+                    ,/,14X,' DIMENSION OF ARRAYS OFFDIS, OFFSET ARE ONLY ',I8,' BUT MUST BE ',I8,' FOR ELEM TYPE ',A)
+
+ 1959 FORMAT(' *ERROR  1959: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
+                    ,/,15X,A,I8,' HAS LENGTH (INCL EFFECTS OF OFFSETS) = ',1ES9.2,'. SHOULD BE ZERO')
+
+88665 format(' In ELMGM1: Rod elem ',i8,  ' has I3_OUT                    = ',3i3)                                                !?
+
+88667 format(' In ELMGM1: Rod elem ',i8,  ' has VX(1), VX(2), VX(2), L12  = ',4(1es14.6))                                         !?
+
+88668 format('                                  VY(1), VY(2), VY(3), MAGY = ',4(1es14.6))                                         !?
+
+88669 format('                                  VZ(1), VZ(2), VZ(3), MAGZ = ',4(1es14.6))                                         !?
+
+98712 format('    VX(1-3)                                 = ',3(1es14.6))                                                         !?
+
+98713 format('    ELEM_LEN_AB                             = ',1es14.6)                                                            !?
+
+98714 format('    Row 1 of TE                             = ',3(1es14.6),' (Unit vector in element X direction)')                 !?
+
+98715 format('    V13(1-3)                                = ',3(1es14.6))                                                         !?
+
+98716 format('    VZ(1-3)                                 = ',3(1es14.6))                                                         !?
+
+! **********************************************************************************************************************************
+ 
+! ##################################################################################################################################
+ 
+      CONTAINS
+ 
+! ##################################################################################################################################
+
+      SUBROUTINE DEBUG_ELMGM1_FOR_BUSH
+
+      IMPLICIT NONE
+
+! **********************************************************************************************************************************
+
+      WRITE(F06,*)
+      WRITE(F06,98720)
+      WRITE(F06,'(A,I8)') ' BUSH element number ', EID
+      WRITE(F06,'(A)')    ' ============================'
+      WRITE(F06,*)
+
+      IF (BUSH_CID >= 0) THEN
+         WRITE(F06,'(A,I8)') '    The element coordinate system will be BUSH_CID coord system   ',bush_cid
+         WRITE(F06,*)
+      ELSE
+         WRITE(F06,'(A)') '    The element coordinate system will be determined from the 2 grids and the specified VVEC'
+         WRITE(F06,*)
+      ENDIF
+
+      IF (EOFF(INT_ELEM_ID) == 'Y') THEN
+
+         WRITE(F06,*) '   OFFDIS_O array of offsets based on input on CBUSH and ELEM_LEN_12 (before any coord transformations)'
+         WRITE(F06,'(A,3(1ES14.6))') '                                     End A  = ', (OFFDIS_O(1,j),j=1,3)
+         WRITE(F06,'(A,3(1ES14.6))') '                                     End B  = ', (OFFDIS_O(2,j),j=1,3)
+         WRITE(F06,*)
+
+         WRITE(F06,*) '   OFFDIS_B array of offsets in basic coords:'
+         WRITE(F06,'(A,3(1ES14.6))') '                                     End A  = ', (OFFDIS_B(1,j),j=1,3)
+         WRITE(F06,'(A,3(1ES14.6))') '                                     End B  = ', (OFFDIS_B(2,j),j=1,3)
+         WRITE(F06,*)
+
+         WRITE(F06,*) '   OFFDIS_G array of offsets transformed to global coords:'
+         WRITE(F06,'(A,3(1ES14.6))') '                                     END A  = ', (OFFDIS_G(1,J),J=1,3)
+         WRITE(F06,'(A,3(1ES14.6))') '                                     End B  = ', (OFFDIS_G(2,j),j=1,3)
+         WRITE(F06,*)
+
+         WRITE(F06,*) '   OFFDIS   array of offsets that will be used as global offsets (must equal OFFDIS_G above)'
+         WRITE(F06,'(A,3(1ES14.6))') '                                     End A  = ', (OFFDIS(1,j),j=1,3)
+         WRITE(F06,'(A,3(1ES14.6))') '                                     End B  = ', (OFFDIS(2,j),j=1,3)
+         WRITE(F06,*)
+
+      ENDIF
+
+      WRITE(F06,'(A,3(1ES14.6))') '    ELEM_LEN_AB                             = ',ELEM_LEN_AB
+      WRITE(F06,'(A,3(1ES14.6))') '    ELEM_LEN_12                             = ',ELEM_LEN_12
+
+      WRITE(F06,*)
+
+      WRITE(F06,98799)
+      WRITE(F06,*)
+
+! **********************************************************************************************************************************
+98720 FORMAT(' __________________________________________________________________________________________________________________',&
+             '_________________'                                                                                               ,//,&
+             ' ::::::::::::::::::::::::::::::::::::::::::START DEBUG(110) OUTPUT FROM SUBROUTINE ELMGM1::::::::::::::::::::::::::',&
+             ':::::::::::::::::',/)
+
+98799 FORMAT(' :::::::::::::::::::::::::::::::::::::::::::END DEBUG(110) OUTPUT FROM SUBROUTINE ELMGM1:::::::::::::::::::::::::::',&
+             ':::::::::::::::::'                                                                                                ,/,&
+             ' __________________________________________________________________________________________________________________',&
+             '_________________',/)
+
+! **********************************************************************************************************************************
+
+      END SUBROUTINE DEBUG_ELMGM1_FOR_BUSH
+
+      END SUBROUTINE ELMGM1

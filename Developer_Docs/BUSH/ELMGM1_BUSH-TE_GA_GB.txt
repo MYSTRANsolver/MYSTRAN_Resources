@@ -1,0 +1,73 @@
+! ----------------------------------------------------------------------------------------------------------------------------------
+! Calculate a coord transformation matrix, TE_GA_GB, that will transform a vector whose x axis is along the GA-GB axis to basic:
+! This will be used for only the x axis when the BUSH offset is along the line GA-GB in order to specify the offsets whenever
+! BUSH_OCID is -1 (default) or blank. The other y and z aves of TE_GA_GB don't matter except thet they be normal to x. So use the
+! procedure outlined in "Some Basic Vector Operations In IDL" (below) to find the y and z axes of TE_GA_GB 
+
+      VX(1) = XEB(2,1) - XEB(1,1)                          ! Unit vector in element X direction 
+      VX(2) = XEB(2,2) - XEB(1,2)
+      VX(3) = XEB(2,3) - XEB(1,3)
+
+      DO I=1,3
+         TE_GA_GB(1,I) = VX(I)/ELEM_LEN_AB                 ! Row 1 of TE_GA_GB
+      ENDDO                                                ! -----------------
+
+      DO I=1,3
+         I3_IN(I)   = I
+         I3_OUT(I)  = I3_IN(I)
+      ENDDO
+      CALL CALC_VEC_SORT_ORDER ( VX, SORT_ORDER, I3_OUT)   ! Use this rather than SORT_INT1_REAL1 - didn't work for vec 10., 0., 0.
+      IF (SORT_ORDER == '     ') THEN                      ! Subr CALC_VEC_SORT_ORDER did not find a sort order
+         FATAL_ERR = FATAL_ERR + 1
+         NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+         WRITE(ERR,1944) SUBR_NAME, TYPE, EID
+         WRITE(F06,1944) SUBR_NAME, TYPE, EID
+         RETURN
+      ENDIF
+                                                           ! See notes on "Some Basic Vector Operations In IDL" on web site:
+                                                           ! http://fermi.jhuapl.edu/s1r/idl/s1rlib/vectors/v_basic.html
+      VY(I3_OUT(1)) =  ZERO                                !  (a) Component of VY in direction of min VX is set to zero
+      VY(I3_OUT(2)) =  VX(I3_OUT(3))                       !  (b) Other 2 VY(i) are corresponding VX(i) switched with one x(-1)
+      VY(I3_OUT(3)) = -VX(I3_OUT(2))
+      MAGY  = DSQRT(VY(1)*VY(1) + VY(2)*VY(2) + VY(3)*VY(3))
+
+      write(bug,88665) eid, (i3_out(i),i=1,3)                                                                                     !?
+      write(bug,88667) eid, vx(1), vx(2), vx(3), elem_len_ab                                                                      !?
+      write(bug,88668) vy(1), vy(2), vy(3), magy                                                                                  !?
+
+      IF (DABS(MAGY) < EPS1) THEN
+         FATAL_ERR = FATAL_ERR + 1
+         NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+         WRITE(ERR,1938) SUBR_NAME, 'Y', TYPE, EID, (VY(I),I=1,3)
+         WRITE(F06,1938) SUBR_NAME, 'Y', TYPE, EID, (VY(I),I=1,3)
+         RETURN
+      ENDIF
+
+      DO I=1,3
+         TE_GA_GB(2,I) = VY(I)/MAGY                        ! Row 2 of TE_GA_GB
+      ENDDO                                                ! -----------------
+
+      CALL CROSS ( VX, VY, VZ )
+
+      MAGZ  = DSQRT(VZ(1)*VZ(1) + VZ(2)*VZ(2) + VZ(3)*VZ(3))
+      write(bug,88669) vz(1), vz(2), vz(3), magz                                                                                  !?
+      write(f06,*)                                                                                                                !?
+
+      IF (DABS(MAGZ) < EPS1) THEN
+         FATAL_ERR = FATAL_ERR + 1
+         NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+         WRITE(ERR,1938) SUBR_NAME, 'Z', TYPE, EID, (VZ(I),I=1,3)
+         WRITE(F06,1938) SUBR_NAME, 'Z', TYPE, EID, (VZ(I),I=1,3)
+         RETURN
+      ENDIF
+
+      DO I=1,3
+         TE_GA_GB(3,I) = VZ(I)/MAGZ                        ! Row 3 of TE_GA_GB
+      ENDDO                                                ! ----------------- 
+
+      write(f06,*) ' Coord transformation matrix TE_GA_GB:'                                                                       !?
+      do i=1,3                                                                                                                    !?
+         write(f06,'(3es14.6)') (te_ga_gb(i,j),j=1,3)                                                                             !?
+      enddo                                                                                                                       !?
+      write(f06,*)                                                                                                                !?
+

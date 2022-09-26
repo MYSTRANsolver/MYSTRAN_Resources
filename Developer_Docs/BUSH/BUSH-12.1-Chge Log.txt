@@ -1,0 +1,9 @@
+! Change log (changes following completion of Version 6.11 updated on 01/07/10)
+
+! 02/11/10: Change OPT to have 6 rows to accomodate differential stiffness matrix calculation
+
+! ----------------------------------------------------------------------------------------------------------------------------------
+! Change log (changes following completion of Version 12.0 updated on 02/01/21)
+
+! 02/11/21: (a) Fix stiffess matrix based on input from Discord's user: numenic
+

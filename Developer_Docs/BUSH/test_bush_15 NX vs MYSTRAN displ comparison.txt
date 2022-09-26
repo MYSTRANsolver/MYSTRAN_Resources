@@ -1,0 +1,49 @@
+test_bush_15
+============
+
+1) NXNastran displ using AUTOSPC N
+   -------------------------------
+
+NX-NASTRAN fudges something in order to get around the fact that the only nonsingular dof is component T3 
+(and it has correct displ). But NX finds a way to print nonsense for the other, singular, dof's
+
+                                             D I S P L A C E M E N T   V E C T O R
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+
+SUBCASE 1:   2      G      1.000000E+03   0.0            0.0            0.0            0.0            0.0
+                           ------------
+SUBCASE 2:   2      G      0.0            1.000000E+03   0.0            0.0            0.0            0.0
+                                          ------------
+SUBCASE 3:   2      G      0.0            0.0            6.666667E-01   0.0            0.0            0.0
+
+SUBCASE 4:   2      G      0.0            0.0            0.0            1.000000E+03   0.0            0.0
+                                                                        ------------
+SUBCASE 5:   2      G      0.0            0.0            0.0            0.0            1.000000E+03   0.0
+                                                                                        ------------
+SUBCASE 6:   2      G      0.0            0.0            0.0            0.0            0.0            1.000000E+03
+                                                                                                      ------------
+
+
+2) MYSTRAN displ using AUTOSPC Y
+   -----------------------------
+
+MYSTRAN gets the correct displacements for the problem. All singular degrees of freedom report 0 displ
+due to the fact that they were correctly SPC'd by MYSTRAN's AUTOSPC feature
+
+                                                       D I S P L A C E M E N T S
+                                              (in global coordinate system at each grid)
+           GRID     COORD       T1             T2             T3             R1             R2             R3
+                     SYS
+SUBCASE 1    2      0      0.0            0.0            0.0            0.0            0.0            0.0         
+
+SUBCASE 2    2      0      0.0            0.0            0.0            0.0            0.0            0.0         
+
+SUBCASE 3    2      0      0.0            0.0            6.666667E-01   0.0            0.0            0.0         
+ 
+SUBCASE 4    2      0      0.0            0.0            0.0            0.0            0.0            0.0         
+
+SUBCASE 5    2      0      0.0            0.0            0.0            0.0            0.0            0.0         
+
+SUBCASE 6    2      0      0.0            0.0            0.0            0.0            0.0            0.0         
+

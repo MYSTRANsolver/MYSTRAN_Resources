@@ -26,7 +26,7 @@ DOCUMENTATION:
 4) Modified the Note in Section 4.3 to state that the differential stiffness matrix has been added for solid elements.
 
 
-13.0 to 13.2 (~9/1/2021)
+13.1 to 13.2 (~9/1/2021)
 ---
 ERRORS:
 1) In subroutine OFP3_ELFE_1D a wrong variable was used for BAR length causing errors

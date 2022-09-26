@@ -1,4 +1,4 @@
-This is the MASTER list of all current and prior changes to the source code and documentation.
+This is the MASTER list of all current and prior changes to the source code and documentation (starting from 11.2).
 Information here can be for features, errors/bugs, a list of source codes changes, changes to documentations, etc.
 After a release, this information is passed to the appropriate user and developer docs.
 Note that changes Prior to 14.0 have been less accurately documented and the time stamps may be approximate.

@@ -4,6 +4,7 @@ DOCUMENTATION
 3.	Investigate the Craig-Bampton Demo (See the Preface for further discussion. It is not clear what other problems may be used. This example is relatively specific so it is put in the developer side for now.
 4.	The “Source_Code_Structure” folder is a data dump for now. It seems there are 2 versions, but neither one may be up to date (though one may be closer than the other).
 5.  Update the change log here: https://github.com/MYSTRANsolver/MYSTRAN_Documentation/blob/main/Developer_Docs/ChangeLog.md
+6.  Need OP2 general documentation and documentation that needs to go in the user manual. Also any notes on codes changes.
 
 BENCHMARKS
 1.	Add CSHEAR models to the benchmarks

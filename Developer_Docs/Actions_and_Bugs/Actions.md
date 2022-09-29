@@ -7,6 +7,7 @@ DOCUMENTATION
 
 BENCHMARKS
 1.	Add CSHEAR models to the benchmarks
+2.  Add in the BUSH, BAR, etc. benchmarks that Toto was working on with Bill
 
 GENERAL 
 1.  Long-term modularization effort for Sparse Solvers
@@ -15,4 +16,7 @@ The user would make changes at the Fortran level and then rebuild to create a "c
 
 ELEMENTS
 1.  For the elements that Harry is working on, get documentation (as best we can) as to what those formulations are.
+
+BUGS
+1.  Look further into the "Bug_Issues.doc" file in this folder
 

@@ -15,6 +15,7 @@ GENERAL
 2.  Look into adding a CSV output. For starters, this could be a default output that is hard coded (no BDF input required).
 The user would make changes at the Fortran level and then rebuild to create a "custom" CSV. After that, it could be adjusted to accept customization via BDF.
 3.  Investigate and document the MYSTRAN.INI file furhter. This is discussed in the Install and Run User Manual and there may be some examples in archive versions of MYSTRAN.
+4.  Need a list of differences between MYSTRAN and NASTRAN PARAMS and reconcile them so they are in sycn and as compatible as possible.
 
 ELEMENTS
 1.  For the elements that Harry is working on, get documentation (as best we can) as to what those formulations are.

@@ -7,8 +7,8 @@ DOCUMENTATION
 6.  Need OP2 general documentation and documentation that needs to go in the user manual. Also any notes on codes changes.
 
 BENCHMARKS
-7.	Add CSHEAR models to the benchmarks
-8.  Add in the BUSH, BAR, etc. benchmarks that Toto was working on with Bill
+1.	Add CSHEAR models to the benchmarks
+2.  Add in the BUSH, BAR, etc. benchmarks that Toto was working on with Bill
 
 GENERAL 
 1.  Long-term modularization effort for Sparse Solvers

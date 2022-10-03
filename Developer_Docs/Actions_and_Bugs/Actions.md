@@ -26,4 +26,5 @@ BUGS
 
 PERFORMANCE
 1.  A shell element study with different number of elements demonstrated that MYSTRAN was very slow for large models. See further information here:
+https://github.com/MYSTRANsolver/MYSTRAN_Documentation/tree/main/Developer_Docs/Shell_Convergence_RunTime_Eval
 

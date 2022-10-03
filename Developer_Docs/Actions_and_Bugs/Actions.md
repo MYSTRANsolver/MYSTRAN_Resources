@@ -24,3 +24,6 @@ ELEMENTS
 BUGS
 1.  Look further into the "Bug_Issues.doc" file in this folder
 
+PERFORMANCE
+1.  A shell element study with different number of elements demonstrated that MYSTRAN was very slow for large models. See further information here:
+

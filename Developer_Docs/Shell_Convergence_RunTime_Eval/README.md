@@ -1,0 +1,2 @@
+These files were used to evaluate convergence (displacement and stress) for a TRI model (with different element sizes).
+Run times were also evalatued. The stand out not wsa the large run time for MYSTRAN for the large model.

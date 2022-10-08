@@ -23,7 +23,6 @@ The user would make changes at the Fortran level and then rebuild to create a "c
 
 ELEMENTS
 1.  (9/2022) For the elements that Harry is working on, get documentation (as best we can) as to what those formulations are.
-2.  (9/2022) Ask about the CBEAM element.
 
 BUGS
 1.  (9/2022) Look further into the "Bug_Issues.doc" file in this folder. This document contains images so it is stored in a Word file for now.

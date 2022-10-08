@@ -35,4 +35,6 @@ https://github.com/MYSTRANsolver/MYSTRAN_Documentation/tree/main/Developer_Docs/
 2.  (10/2022) Investigate code changes to improve performance, specifically for the mass matrix.
 
 COMPILING
-1.  (10/2022) Reconsider adding a CodeBlocks option.
+1.  (10/2022) Reconsider adding a CodeBlocks option. This would not be a supported option and would be stated as such.
+2.  (10/2022) Further evaluate this comment "My changes to superlu did not work and I did not want to go any further. Multi languages can be problematic and C is not my native language.
+Your team should cleanup the superlu cmake so that it works out of the box."

@@ -7,7 +7,7 @@ DOCUMENTATION
 6.  (9/2022) Need OP2 general documentation and documentation that needs to go in the user manual. There is some preliminary information in the following link, but we also need something more formal for the user manual.
 https://github.com/MYSTRANsolver/MYSTRAN_Documentation/tree/main/User_Docs/OP2_Preliminary
 7   (10/2022) Create a user document with some tips that can help users (things that may not be common). For example, SKIPMGG may be considered for problems where a mass matrix is not needed.
-8.  109/2022) Create a user document with sample BDF/DAT files that shows the setup for a MYSTRAN/NASTRAN deck in a simple way, including comments.
+8.  (10/2022) Create a user document with sample BDF/DAT files that shows the setup for a MYSTRAN/NASTRAN deck in a simple way, including comments.
 Also, within the sample, show how some common flags that may be not be obvious are used (for example, PARAM, SOLLIB, BANDED and PARAM, SOLLIB, SPARSE).
 
 BENCHMARKS

@@ -34,4 +34,5 @@ PERFORMANCE
 https://github.com/MYSTRANsolver/MYSTRAN_Documentation/tree/main/Developer_Docs/Shell_Convergence_RunTime_Eval
 2.  (10/2022) Investigate code changes to improve performance, specifically for the mass matrix.
 
-
+COMPILING
+1.  (10/2022) Reconsider adding a CodeBlocks option.

@@ -27,6 +27,8 @@ ELEMENTS
 BUGS
 1.  (9/2022) Look further into the "Bug_Issues.doc" file in this folder. This document contains images so it is stored in a Word file for now.
 2.  (9/2022) There was a falilure of a run (I forget now, but something to do with 3 material properties?) The change seemed to have occurred between 13.2 and 13.3 as I remember.
+If you run "large_shelled_beam_test.dat", in version 13.3 or after, this error will appear.
+
 
 PERFORMANCE
 1.  (9/2022) A shell element study with different number of elements demonstrated that MYSTRAN was very slow for large models. See further information here:

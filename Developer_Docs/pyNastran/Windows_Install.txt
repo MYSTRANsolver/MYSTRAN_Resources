@@ -1,0 +1,50 @@
+To use pyNastran on Windows, consider the following notes:
+
+PyNastran GUI for Windows
+-------------------------
+Although you may download and use python, this is not necessary if you want to directly use the pyNastran GUI on Windows.
+You may directly download an EXE file from SourceForge. Double check that you are downloading the latest file (which may not be from the green button).
+https://sourceforge.net/projects/pynastran/files/?source=navbar
+
+Also note that the main pyNastran page is here, which links to SourceForge to download the GUI
+https://github.com/SteveDoyle2/pyNastran
+
+
+
+
+PyNastran Converter for Windows (ABAQUS to NASTRAN)
+---------------------------------------------------
+Within pyNastran, there is a smart converter for an ABAQUS/CacluliX INP deck to a NASTRAN/MYSTRAN BDF/DAT deck.
+It is more than just a simple node/element converter and it is able to convert and link properties, materials, loads, and boundary conditions.
+
+To use the converter, you need to run command line pyNastran. To do so, first download python. Note that GUI EXE (as discussed above) contains python within it.
+https://www.python.org/
+
+Next, you need to determine the location of pip.exe. In one case, it was located here:
+C:\Users\Computer\AppData\Local\Programs\Python\Python310\Scripts
+
+Using a command window set to this path, type "pip install pyNastran" (see also https://pynastran-git.readthedocs.io/en/latest/installation/installation.html)
+This will pull pyNastran from a database? and install it.
+
+The command line "Format_converter" can be used.
+
+
+
+PyNastran (General) for Windows
+-------------------------------
+For the general installation, first download python. Note that GUI EXE (as discussed above) contains python within it.
+https://www.python.org/
+
+Next, you need to determine the location of pip.exe. In one case, it was located here:
+C:\Users\Computer\AppData\Local\Programs\Python\Python310\Scripts
+
+Using a command window set to this path, type "pip install pyNastran" (see also https://pynastran-git.readthedocs.io/en/latest/installation/installation.html)
+This will pull pyNastran from a database? and install it.
+
+If you now run pyNastranGUI from a command line (while the path is set correctly), it will request PyQT5/6 or PySide2/6.
+You will also need to install VTK.
+Neither one of these options has been explored for Windows (but you can use the prebuilt pyNastran GUI instead).
+
+
+
+

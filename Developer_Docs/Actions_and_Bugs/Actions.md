@@ -27,7 +27,8 @@ ELEMENTS
 BUGS
 1.  (9/2022) Look further into the "Bug_Issues.doc" file in this folder. This document contains images so it is stored in a Word file for now.
 2.  (9/2022) There was a falilure of a run (I forget now, but something to do with 3 material properties?) The change seemed to have occurred between 13.2 and 13.3 as I remember.
-If you run "large_shelled_beam_test.dat", in version 13.3 or after, this error will appear.
+If you run "large_shelled_beam_test.dat", which is in the Actions and Bugs folder, in MYSTRAN version 13.3 or after, this error will appear.
+https://github.com/MYSTRANsolver/MYSTRAN_Documentation/blob/main/Developer_Docs/Actions_and_Bugs/large_shelled_beam_test.dat
 
 
 PERFORMANCE

@@ -1,8 +1,7 @@
-# MYSTRAN_Documentation
+# MYSTRAN_Resources
 
-The documentation for [MYSTRAN](https://github.com/MYSTRANsolver/MYSTRAN) is stored here.
+This repository contains files related to the main MYSTRAN project here:[MYSTRAN](https://github.com/MYSTRANsolver/MYSTRAN)
 
-As of 9/26/2022, the major documentation updates have been completed.
-Further updates and improvements are in work.
+The MYSTRAN_Development folder is a catch all for all files that are not source code or end user documentation (those are located in the main repository linked above).
 
-Test
+The Preprocessor and Postprocessor folders contain files related to pre/post processing related to the MYSTRAN project (and by extension NASTRAN as well).

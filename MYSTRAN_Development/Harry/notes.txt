@@ -1,0 +1,1 @@
+look at project/main to see what files and libs are being used; note that some libs such as liblapack.a are part of the ubuntu installation. 

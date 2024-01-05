@@ -9,6 +9,9 @@ https://github.com/MYSTRANsolver/MYSTRAN_Documentation/tree/main/User_Docs/OP2_P
 7.  (10/2022) Create a user document with some tips that can help users (things that may not be common). For example, SKIPMGG may be considered for problems where a mass matrix is not needed.
 8.  (10/2022) Create a user document with sample BDF/DAT files that shows the setup for a MYSTRAN/NASTRAN deck in a simple way, including comments.
 Also, within the sample, show how some common flags that may be not be obvious are used (for example, PARAM, SOLLIB, BANDED and PARAM, SOLLIB, SPARSE).
+9. (12/28/2023) 6.3.1.23 STRAIN in the manual. By NONE, it says displacements instead of strain. The same is true for the stress section.
+10. (12/28/2023) on the CBUSH element, the continuation says BAR98.
+
 
 BENCHMARKS
 1.	(9/2022) Add CSHEAR models to the benchmarks

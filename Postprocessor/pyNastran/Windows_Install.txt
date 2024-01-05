@@ -20,11 +20,8 @@ It is more than just a simple node/element converter and it is able to convert a
 To use the converter, you need to run command line pyNastran. To do so, first download python. Note that GUI EXE (as discussed above) contains python within it.
 https://www.python.org/
 
-Next, you need to determine the location of pip.exe. In one case, it was located here:
-C:\Users\Computer\AppData\Local\Programs\Python\Python310\Scripts
-
-Using a command window set to this path, type "pip install pyNastran" (see also https://pynastran-git.readthedocs.io/en/latest/installation/installation.html)
-This will pull pyNastran from a database? and install it.
+Using a command window set to this path, type "python -m pip install pyNastran" (see also https://pynastran-git.readthedocs.io/en/latest/installation/installation.html)
+This will pull pyNastran from PyPI (https://pypi.org/) and install it.
 
 The command line "Format_converter" can be used.
 
@@ -35,14 +32,14 @@ PyNastran (General) for Windows
 For the general installation, first download python. Note that GUI EXE (as discussed above) contains python within it.
 https://www.python.org/
 
-Next, you need to determine the location of pip.exe. In one case, it was located here:
-C:\Users\Computer\AppData\Local\Programs\Python\Python310\Scripts
+Using a command window set to this path, type the following to download from PyPI":
+ - "python -m pip install pyNastran" (see also https://pynastran-git.readthedocs.io/en/latest/installation/installation.html)
+ - "python -m pip install vtk"
+This will pull a few package directly from PyPI (https://pypi.org/) and install it.
 
-Using a command window set to this path, type "pip install pyNastran" (see also https://pynastran-git.readthedocs.io/en/latest/installation/installation.html)
-This will pull pyNastran from a database? and install it.
+If you now run pyNastranGUI from a command line (while the path is set correctly), if it doesn't open and instead complains about PyQT5/6 or PySide2/6, run:
+ - "python -m pip install pyqt5"
 
-If you now run pyNastranGUI from a command line (while the path is set correctly), it will request PyQT5/6 or PySide2/6.
-You will also need to install VTK.
 Neither one of these options has been explored for Windows (but you can use the prebuilt pyNastran GUI instead).
 
 

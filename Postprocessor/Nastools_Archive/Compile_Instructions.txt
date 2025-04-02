@@ -1,0 +1,10 @@
+
+For windows, install Rust with this link
+https://www.rust-lang.org/tools/install
+
+
+Once installed, "cargo" will be an available in the CMD window.
+Set the CMD window directory to the source code, where cargo.lock exists. Then type:
+"cargo build --release"
+
+After this is complete, a "target" directory will be completed that contains the EXE files
